@@ -211,10 +211,9 @@ public class PizzaOrderService {
         	basePrice = matchingPizza.get().getSizes().get(pizza.getSize());
         }
         
-        // this case has been cobvered in toppings
-//        if (pizza.isExtraCheese()) {
-//            basePrice += 35;
-//        }
+        if (pizza.isExtraCheese()) {
+            basePrice += 35;
+        }
         
         Map<String, Integer> toppingPriceMap = pizzaMenu.getToppings()
         	    .values()                           
