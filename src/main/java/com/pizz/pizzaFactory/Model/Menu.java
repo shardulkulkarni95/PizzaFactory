@@ -9,17 +9,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class Menu {
 	
-	//Vegetarian Pizza:
-	//Non-Vegetarian
-	//Type of crust
-	//Extra toppings
-		//Veg toppings
-		//Non-Veg toppings
-		//Extra cheese
-	// Cold drink (Rs 55)
-	// Mousse cake (Rs. 90)
-	
-	// Using inmemory Data.
+
+//	prices should have been in map. this is casing iteration in servce. to be added.
 	
 	private List<Category> categories;
     private List<CrustType> crustTypes;

@@ -7,6 +7,7 @@ import com.pizz.pizzaFactory.DTO.SideOrderDTO;
 import com.pizz.pizzaFactory.Model.Menu;
 import com.pizz.pizzaFactory.Model.Menu.Category;
 import com.pizz.pizzaFactory.Model.Menu.Pizza;
+import com.pizz.pizzaFactory.Model.Menu.Side;
 import com.pizz.pizzaFactory.Model.Menu.Topping;
 
 import java.util.ArrayList;
@@ -246,12 +247,14 @@ public class PizzaOrderService {
     private double calculateSideOrderPrice(SideOrderDTO sideOrder) {
         double price = 0.0;
         
+        Map<String, Integer> sidePriceMap = pizzaMenu.getSides()
+        	    .stream()
+        	    .collect(Collectors.toMap(
+        	        Side::getName,
+        	        Side::getPrice
+        	    ));
         // Set price based on side order type
-        if (sideOrder.getName().equals("Cold drink")) {
-            price = 55;
-        } else if (sideOrder.getName().equals("Mousse cake")) {
-            price = 90;
-        }
+        price = sidePriceMap.getOrDefault(sideOrder.getName(), 0);
         
         return price * sideOrder.getQuantity();
     }
