@@ -5,10 +5,15 @@ import com.pizz.pizzaFactory.DTO.PizzaDTO;
 import com.pizz.pizzaFactory.DTO.PizzaOrderDTO;
 import com.pizz.pizzaFactory.DTO.SideOrderDTO;
 import com.pizz.pizzaFactory.Model.Menu;
+import com.pizz.pizzaFactory.Model.Menu.Category;
+import com.pizz.pizzaFactory.Model.Menu.Pizza;
+import com.pizz.pizzaFactory.Model.Menu.Topping;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -193,16 +198,31 @@ public class PizzaOrderService {
         
         double basePrice = 0.0;
         
+        List<Pizza> allPizza = pizzaMenu.getCategories().stream().flatMap(e -> e.getPizzas().stream())
+                .collect(Collectors.toList());
+        
+        Optional<Pizza> matchingPizza = allPizza.stream()
+        	    .filter(e -> e.getName().equals(pizza.getName()))
+        	    .findFirst();
+        
 
-        if (pizza.getName().equals("Deluxe Veggie")) {
-            if (pizza.getSize().equals("Regular")) basePrice = 150;
-            else if (pizza.getSize().equals("Medium")) basePrice = 200;
-            else if (pizza.getSize().equals("Large")) basePrice = 325;
+        if (matchingPizza.isPresent()) {
+        	basePrice = matchingPizza.get().getSizes().get(pizza.getSize());
         }
         
-        if (pizza.isExtraCheese()) {
-            basePrice += 35;
-        }
+        // this case has been cobvered in toppings
+//        if (pizza.isExtraCheese()) {
+//            basePrice += 35;
+//        }
+        
+        Map<String, Integer> toppingPriceMap = pizzaMenu.getToppings()
+        	    .values()                           
+        	    .stream()                           
+        	    .flatMap(List::stream)             
+        	    .collect(Collectors.toMap(
+        	        Topping::getName,               
+        	        Topping::getPrice               
+        	    ));
         
 
         if (pizza.getExtraToppings() != null && !pizza.getExtraToppings().isEmpty()) {
@@ -215,10 +235,7 @@ public class PizzaOrderService {
 
             for (int i = 0; i < paidToppings; i++) {
                 String topping = pizza.getExtraToppings().get(i);
-                // Add different prices based on topping type
-                if (topping.equals("Black olive")) basePrice += 20;
-                else if (topping.equals("Capsicum")) basePrice += 25;
-                // Add similar price definitions for other toppings
+                basePrice += toppingPriceMap.get(topping);
             }
         }
         
