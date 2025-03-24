@@ -30,7 +30,6 @@ public class PizzaOrderService {
     
     
     public OrderResponseDTO processOrder(PizzaOrderDTO orderRequest) throws IllegalArgumentException {
-        // List to store validation errors
         List<String> validationErrors = new ArrayList<>();
         
         // Validate each pizza in the order
@@ -70,7 +69,7 @@ public class PizzaOrderService {
             }
         }
         
-        // If there are validation errors, throw exception with all errors
+ 
         if (!validationErrors.isEmpty()) {
             throw new IllegalArgumentException("Order validation failed: " + String.join("; ", validationErrors));
         }
@@ -190,27 +189,22 @@ public class PizzaOrderService {
         return total;
     }
     
-    // Calculate price for a single pizza with its customizations
     private double calculatePizzaPrice(PizzaDTO pizza) {
-        // Base price lookup - in a real application, you would fetch this from the menu
-        // This is simplified for the example
+        
         double basePrice = 0.0;
         
-        // Set base pizza price based on type and size
-        // These would normally come from the menu database
+
         if (pizza.getName().equals("Deluxe Veggie")) {
             if (pizza.getSize().equals("Regular")) basePrice = 150;
             else if (pizza.getSize().equals("Medium")) basePrice = 200;
             else if (pizza.getSize().equals("Large")) basePrice = 325;
         }
-        // Add similar price definitions for other pizzas
         
-        // Add cost for extra cheese if selected
         if (pizza.isExtraCheese()) {
             basePrice += 35;
         }
         
-        // Add cost for extra toppings
+
         if (pizza.getExtraToppings() != null && !pizza.getExtraToppings().isEmpty()) {
             // For large pizzas, first 2 toppings are free
             int paidToppings = pizza.getExtraToppings().size();
@@ -218,7 +212,7 @@ public class PizzaOrderService {
                 paidToppings = Math.max(0, paidToppings - 2);
             }
             
-            // Calculate topping costs - in a real app, you'd use actual prices from the menu
+
             for (int i = 0; i < paidToppings; i++) {
                 String topping = pizza.getExtraToppings().get(i);
                 // Add different prices based on topping type
