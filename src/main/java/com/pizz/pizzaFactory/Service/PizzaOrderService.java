@@ -4,6 +4,7 @@ import com.pizz.pizzaFactory.DTO.OrderResponseDTO;
 import com.pizz.pizzaFactory.DTO.PizzaDTO;
 import com.pizz.pizzaFactory.DTO.PizzaOrderDTO;
 import com.pizz.pizzaFactory.DTO.SideOrderDTO;
+import com.pizz.pizzaFactory.ExceptionHandler.PizzaException;
 import com.pizz.pizzaFactory.Model.Menu;
 import com.pizz.pizzaFactory.Model.Menu.Category;
 import com.pizz.pizzaFactory.Model.Menu.Pizza;
@@ -35,8 +36,8 @@ public class PizzaOrderService {
     private final List<String> validCrustTypes = Arrays.asList("New hand tossed", "Wheat thin crust", "Cheese Burst", "Fresh pan pizza");
     
     
-    public OrderResponseDTO processOrder(PizzaOrderDTO orderRequest) throws IllegalArgumentException {
-        List<String> validationErrors = new ArrayList<>();
+    public OrderResponseDTO processOrder(PizzaOrderDTO orderRequest) {
+        
         
         // Validate each pizza in the order
         for (int i = 0; i < orderRequest.getPizzas().size(); i++) {
@@ -46,38 +47,26 @@ public class PizzaOrderService {
             // Validate pizza exists in menu
             if (!isPizzaInMenu(pizza.getName())) {
             	// throw exception 
-                validationErrors.add(pizzaIdentifier + ": Pizza not found in menu");
-                continue;
+            	throw new PizzaException("Pizza not found in menu");
             }
             
             // Validate toppings for vegetarian pizzas
             if (isVegetarianPizza(pizza.getName())) {
             	// throw exception 
-                List<String> errors = validateVegetarianToppings(pizza, pizzaIdentifier);
-                validationErrors.addAll(errors);
+                validateVegetarianToppings(pizza, pizzaIdentifier);
+                
             }
             
             // Validate toppings for non-vegetarian pizzas
             if (isNonVegetarianPizza(pizza.getName())) {
             	// throw exception 
-                List<String> errors = validateNonVegetarianToppings(pizza, pizzaIdentifier);
-                validationErrors.addAll(errors);
+                validateNonVegetarianToppings(pizza, pizzaIdentifier);
             }
             
             // Validate crust type
-            List<String> crustErrors = validateCrustType(pizza, pizzaIdentifier);
-            validationErrors.addAll(crustErrors);
+            validateCrustType(pizza, pizzaIdentifier);
             
-            // Validate if toppings in large pizza comply with free toppings rule
-            if ("Large".equals(pizza.getSize())) {
-                List<String> freeTopErrors = validateLargePizzaToppings(pizza, pizzaIdentifier);
-                validationErrors.addAll(freeTopErrors);
-            }
-        }
-        
- 
-        if (!validationErrors.isEmpty()) {
-            throw new IllegalArgumentException("Order validation failed: " + String.join("; ", validationErrors));
+  
         }
         
         // Calculate total price for the order
@@ -94,8 +83,7 @@ public class PizzaOrderService {
     }
     
     // Rule 1: Vegetarian pizza cannot have a non-vegetarian topping
-    private List<String> validateVegetarianToppings(PizzaDTO pizza, String pizzaIdentifier) {
-        List<String> errors = new ArrayList<>();
+    private void validateVegetarianToppings(PizzaDTO pizza, String pizzaIdentifier) {
         
         if (pizza.getExtraToppings() != null) {
             List<String> nonVegToppingsFound = pizza.getExtraToppings().stream()
@@ -103,58 +91,51 @@ public class PizzaOrderService {
                 .collect(Collectors.toList());
                 
             if (!nonVegToppingsFound.isEmpty()) {
-                errors.add(pizzaIdentifier + ": Vegetarian pizza cannot have non-vegetarian toppings: " + 
+            	throw new PizzaException(pizzaIdentifier + ": Vegetarian pizza cannot have non-vegetarian toppings: " + 
                            String.join(", ", nonVegToppingsFound));
             }
         }
-        
-        return errors;
+
     }
     
     // Rule 2: Non-vegetarian pizza cannot have paneer topping
-    private List<String> validateNonVegetarianToppings(PizzaDTO pizza, String pizzaIdentifier) {
-        List<String> errors = new ArrayList<>();
+    private void validateNonVegetarianToppings(PizzaDTO pizza, String pizzaIdentifier) {
+     
         
         if (pizza.getExtraToppings() != null) {
             boolean hasPaneerTopping = pizza.getExtraToppings().contains("Paneer");
             
             if (hasPaneerTopping) {
-                errors.add(pizzaIdentifier + ": Non-vegetarian pizza cannot have paneer topping");
+            	throw new PizzaException(pizzaIdentifier + ": Non-vegetarian pizza cannot have paneer topping");
             }
             
             // Rule 4: You can add only one of the non-veg toppings in non-vegetarian pizza
             List<String> nonVegToppingsSelected = pizza.getExtraToppings().stream()
                 .filter(this::isNonVegTopping)
                 .collect(Collectors.toList());
-                
+            System.out.println("before exception");
             if (nonVegToppingsSelected.size() > 1) {
-                errors.add(pizzaIdentifier + ": Non-vegetarian pizza can have only one non-vegetarian topping");
+            	throw new PizzaException(pizzaIdentifier + ": Non-vegetarian pizza can have only one non-vegetarian topping");
             }
+            System.out.println("after exception");
         }
         
-        return errors;
+      
     }
     
     // Rule 3: Only one type of crust can be selected for any pizza
-    private List<String> validateCrustType(PizzaDTO pizza, String pizzaIdentifier) {
-        List<String> errors = new ArrayList<>();
+    private void validateCrustType(PizzaDTO pizza, String pizzaIdentifier) {
+        
         
         if (pizza.getCrustType() == null || pizza.getCrustType().isEmpty()) {
-            errors.add(pizzaIdentifier + ": Crust type must be selected");
+        	throw new PizzaException(pizzaIdentifier + ": Crust type must be selected");
         } else if (!validCrustTypes.contains(pizza.getCrustType())) {
-            errors.add(pizzaIdentifier + ": Invalid crust type. Valid options are: " + 
+        	throw new PizzaException(pizzaIdentifier + ": Invalid crust type. Valid options are: " + 
                        String.join(", ", validCrustTypes));
         }
-        
-        return errors;
+       
     }
     
-    // Rule 5: Large size pizzas come with any 2 toppings of customer's choice with no additional cost
-    private List<String> validateLargePizzaToppings(PizzaDTO pizza, String pizzaIdentifier) {
-        // This is more of a pricing rule than a validation rule
-        // We'll use this to adjust pricing rather than to validate
-        return new ArrayList<>();
-    }
     
     // Utility method to check if a pizza is in the menu
     private boolean isPizzaInMenu(String pizzaName) {

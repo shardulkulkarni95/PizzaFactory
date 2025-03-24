@@ -2,8 +2,11 @@ package com.pizz.pizzaFactory.DTO;
 
 import java.util.List;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class PizzaDTO {
 
+	@NotBlank(message = "Pizza name cannot be blank")
 	private String name;
     private String size; // Regular, Medium, Large
     private String crustType;
